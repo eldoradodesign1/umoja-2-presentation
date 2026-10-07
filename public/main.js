@@ -16,11 +16,24 @@ const progressFill = document.querySelector('#progressFill');
 const chapterMenu = document.querySelector('#chapterMenu');
 const menuButton = document.querySelector('#menuButton');
 const loadingOverlay = document.querySelector('#loadingOverlay');
+const deckLogo = document.querySelector('#deckLogo');
 
 const profileNames = {
   vodacom: 'VODACOM',
   brothers: 'LES FRÈRES',
   btl: 'BTL AFRICA',
+};
+
+const staticPasswords = {
+  vodacom: 'vod@com123',
+  brothers: 'DeLaSalleCongo',
+  btl: 'Beyondtheline26',
+};
+
+const brandByTone = {
+  vodacom: { logo: 'assets/vodacom-logo.png', alt: 'Vodacom', accent: '#e60000', accentLight: '#ff6b6b', night: '#16090c', night2: '#2a1016' },
+  brothers: { logo: 'assets/lasalle-logo.png', alt: 'La Salle', accent: '#1455a2', accentLight: '#4f88d6', night: '#071b3b', night2: '#0d3266' },
+  btl: { logo: 'assets/btl-logo.jpeg', alt: 'BTL Beyond The Line', accent: '#0877e8', accentLight: '#5aa9ff', night: '#07111f', night2: '#0b1a2f' },
 };
 
 let selectedProfile = null;
@@ -29,7 +42,7 @@ let currentIndex = 0;
 let isMoving = false;
 let touchStartY = 0;
 
-const fallbackImage = '/assets/community.jpg';
+const fallbackImage = 'assets/community.jpg';
 
 function image(src, alt = '') {
   return `<img src="${src}" alt="${alt}" loading="eager" onerror="this.src='${fallbackImage}'">`;
@@ -181,6 +194,14 @@ function renderDeck() {
   navDots.innerHTML = deck.chapters.map((chapter, index) => `<button class="nav-dot ${index === 0 ? 'is-active' : ''}" aria-label="Aller au chapitre ${index + 1}" data-index="${index}"></button>`).join('');
   chapterMenu.innerHTML = `<p class="eyebrow">CHAPITRES</p>${deck.chapters.map((chapter, index) => `<button data-index="${index}" class="${index === 0 ? 'is-current' : ''}"><small>${chapter.index}</small><strong>${chapter.title.replace(/<[^>]+>/g, '').replace('<br>', ' ')}</strong></button>`).join('')}`;
   audienceLabel.textContent = deck.audience;
+  const brand = brandByTone[deck.tone] || brandByTone.btl;
+  document.body.dataset.tone = deck.tone || 'btl';
+  document.documentElement.style.setProperty('--brand-accent', brand.accent);
+  document.documentElement.style.setProperty('--brand-light', brand.accentLight);
+  document.documentElement.style.setProperty('--brand-night', brand.night);
+  document.documentElement.style.setProperty('--brand-night-2', brand.night2);
+  deckLogo.src = deck.logo || brand.logo;
+  deckLogo.alt = deck.logoAlt || brand.alt;
   currentIndex = 0;
   updateSlide(false);
 }
@@ -241,13 +262,23 @@ async function login(event) {
   submit.disabled = true;
   submit.querySelector('span').textContent = 'Vérification...';
   try {
-    const response = await fetch('/api/login', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profile: selectedProfile, password: passwordInput.value }),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Accès refusé.');
-    await openDeck(result.token);
+    let result;
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: selectedProfile, password: passwordInput.value }),
+      });
+      if (response.status === 404) throw new Error('STATIC_MODE');
+      result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Accès refusé.');
+      await openDeck(result);
+      return;
+    } catch (serverError) {
+      if (serverError.message !== 'STATIC_MODE' && serverError.name !== 'TypeError') throw serverError;
+      if (passwordInput.value !== staticPasswords[selectedProfile]) throw new Error('Mot de passe incorrect.');
+      result = { ok: true, profile: selectedProfile, static: true };
+      await openDeck(result);
+    }
   } catch (error) {
     loginError.textContent = error.message || 'La connexion a échoué.';
   } finally {
@@ -256,12 +287,17 @@ async function login(event) {
   }
 }
 
-async function openDeck(token) {
+async function openDeck(result) {
   loadingOverlay.classList.add('is-loading');
-  const response = await fetch(`/api/deck?token=${encodeURIComponent(token)}`, { cache: 'no-store' });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.message || 'Impossible de charger le parcours.');
-  deck = result.deck;
+  if (result.static) {
+    const staticModule = await import('./decks.js');
+    deck = staticModule.decks[result.profile];
+  } else {
+    const response = await fetch(`/api/deck?token=${encodeURIComponent(result.token)}`, { cache: 'no-store' });
+    const serverResult = await response.json();
+    if (!response.ok) throw new Error(serverResult.message || 'Impossible de charger le parcours.');
+    deck = serverResult.deck;
+  }
   renderDeck();
   closeModal();
   loginView.hidden = true;
@@ -273,6 +309,13 @@ function logout() {
   closeMenu();
   deckView.hidden = true;
   loginView.hidden = false;
+  document.body.dataset.tone = 'btl';
+  document.documentElement.style.setProperty('--brand-accent', brandByTone.btl.accent);
+  document.documentElement.style.setProperty('--brand-light', brandByTone.btl.accentLight);
+  document.documentElement.style.setProperty('--brand-night', brandByTone.btl.night);
+  document.documentElement.style.setProperty('--brand-night-2', brandByTone.btl.night2);
+  deckLogo.src = brandByTone.btl.logo;
+  deckLogo.alt = brandByTone.btl.alt;
   deck = null;
   currentIndex = 0;
   slidesRoot.innerHTML = '';

@@ -1,18 +1,4 @@
-import http from 'node:http';
-import { createReadStream, existsSync, statSync } from 'node:fs';
-import { extname, join, normalize } from 'node:path';
-import { randomUUID } from 'node:crypto';
-
-const PORT = Number(process.env.PORT || 3000);
-const PUBLIC_DIR = join(process.cwd(), 'public');
-const sessions = new Map();
-
-const passwords = {
-  vodacom: 'vod@com123',
-  brothers: 'DeLaSalleCongo',
-  btl: 'Beyondtheline26',
-};
-
+// Généré depuis server.js pour le mode statique GitHub Pages.
 const media = {
   logo: 'assets/btl-logo.jpeg',
   community: 'assets/community.jpg',
@@ -338,59 +324,4 @@ const decks = {
   },
 };
 
-const MIME = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml',
-};
-
-function sendJson(res, status, payload) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(JSON.stringify(payload));
-}
-
-function readJson(req) {
-  return new Promise((resolve, reject) => {
-    let raw = '';
-    req.on('data', chunk => { raw += chunk; if (raw.length > 10_000) req.destroy(); });
-    req.on('end', () => { try { resolve(JSON.parse(raw || '{}')); } catch { reject(new Error('invalid_json')); } });
-    req.on('error', reject);
-  });
-}
-
-function serveStatic(req, res) {
-  const requestPath = req.url === '/' ? '/index.html' : decodeURIComponent(req.url.split('?')[0]);
-  const cleanPath = normalize(requestPath).replace(/^([.][.][/\\])+/, '');
-  const filePath = join(PUBLIC_DIR, cleanPath);
-  if (!filePath.startsWith(PUBLIC_DIR) || !existsSync(filePath) || !statSync(filePath).isFile()) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Not found');
-    return;
-  }
-  res.writeHead(200, { 'Content-Type': MIME[extname(filePath)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
-  createReadStream(filePath).pipe(res);
-}
-
-const server = http.createServer(async (req, res) => {
-  try {
-    if (req.method === 'POST' && req.url === '/api/login') {
-      const { profile, password } = await readJson(req);
-      if (!passwords[profile] || passwords[profile] !== password) return sendJson(res, 401, { ok: false, message: 'Mot de passe incorrect.' });
-      const token = randomUUID();
-      sessions.set(token, { profile, createdAt: Date.now() });
-      return sendJson(res, 200, { ok: true, token, profile });
-    }
-    if (req.method === 'GET' && req.url.startsWith('/api/deck')) {
-      const url = new URL(req.url, `http://${req.headers.host}`);
-      const session = sessions.get(url.searchParams.get('token'));
-      if (!session || Date.now() - session.createdAt > 4 * 60 * 60 * 1000) return sendJson(res, 401, { ok: false, message: 'Session expirée. Reconnectez-vous.' });
-      return sendJson(res, 200, { ok: true, deck: { ...decks[session.profile], common } });
-    }
-    if (req.method === 'POST' && req.url === '/api/logout') return sendJson(res, 200, { ok: true });
-    if (req.method === 'GET') return serveStatic(req, res);
-    sendJson(res, 405, { ok: false, message: 'Méthode non autorisée.' });
-  } catch (error) {
-    sendJson(res, 500, { ok: false, message: 'Une erreur interne est survenue.' });
-  }
-});
-
-server.listen(PORT, '0.0.0.0', () => console.log(`UMOJA presentation listening on ${PORT}`));
+export { decks, common };
