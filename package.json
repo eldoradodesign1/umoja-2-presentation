@@ -1,0 +1,11 @@
+{
+  "name": "umoja-interactive-presentation",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "build": "node -e \"console.log('Static assets are served by the UMOJA server.')\"",
+    "check": "node --check server.js && node --check public/main.js"
+  }
+}

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07111F" />
+  <title>UMOJA 2 — One La Salle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+
+    <main id="loginView" class="login-view" aria-labelledby="loginTitle">
+      <header class="login-brand reveal-ready">
+        <img class="login-logo" src="/assets/btl-logo.jpeg" alt="BTL Beyond The Line" />
+        <div class="brand-sigil">BTL</div>
+        <div class="brand-line"></div>
+        <p>BEYOND THE LINE · PRIVATE PRESENTATION</p>
+      </header>
+
+      <section class="login-panel">
+        <div class="login-copy">
+          <p class="eyebrow">UMOJA — ONE LASALLE · ÉDITION 2</p>
+          <h1 id="loginTitle">Noël pour ceux<br><em>qui veillent sur nous.</em></h1>
+          <p class="lead">Choisissez votre espace de présentation. Le contenu et les indicateurs s’adaptent à votre rôle dans l’aventure UMOJA.</p>
+        </div>
+
+        <div class="access-grid" role="list" aria-label="Espaces de présentation">
+          <button class="access-card" data-profile="vodacom" role="listitem">
+            <span class="access-index">01</span>
+            <span class="access-title">Vodacom</span>
+            <span class="access-copy">Activation, M-Pesa, ROI</span>
+            <span class="access-arrow">↗</span>
+          </button>
+          <button class="access-card" data-profile="brothers" role="listitem">
+            <span class="access-index">02</span>
+            <span class="access-title">Les Frères</span>
+            <span class="access-copy">Mission, communauté, impact</span>
+            <span class="access-arrow">↗</span>
+          </button>
+          <button class="access-card" data-profile="btl" role="listitem">
+            <span class="access-index">03</span>
+            <span class="access-title">BTL Africa</span>
+            <span class="access-copy">Stratégie, modèle, exécution</span>
+            <span class="access-arrow">↗</span>
+          </button>
+        </div>
+      </section>
+
+      <p class="login-footer">© BTL AFRICA · UMOJA 2 · 2026</p>
+    </main>
+
+    <div id="passwordModal" class="modal-shell" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal></div>
+      <section class="password-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <button class="modal-close" data-close-modal aria-label="Fermer">×</button>
+        <p class="eyebrow" id="modalKicker">ACCÈS PRIVÉ</p>
+        <h2 id="modalTitle">Connexion</h2>
+        <p id="modalDescription">Saisissez le mot de passe remis pour ce parcours.</p>
+        <form id="loginForm" novalidate>
+          <label for="passwordInput">Mot de passe</label>
+          <div class="password-row">
+            <input id="passwordInput" type="password" autocomplete="current-password" placeholder="••••••••••••" required />
+            <button type="button" id="togglePassword" class="toggle-password" aria-label="Afficher le mot de passe">Voir</button>
+          </div>
+          <p id="loginError" class="form-error" role="alert"></p>
+          <button id="submitLogin" class="primary-button" type="submit"><span>Ouvrir le parcours</span><b>→</b></button>
+        </form>
+      </section>
+    </div>
+
+    <main id="deckView" class="deck-view" hidden>
+      <header class="deck-chrome">
+        <button id="backToLogin" class="chrome-logo" aria-label="Revenir à la connexion">
+          <img src="/assets/btl-logo.jpeg" alt="BTL Beyond The Line" />
+        </button>
+        <div class="deck-status">
+          <span id="audienceLabel">UMOJA</span>
+          <span class="status-divider"></span>
+          <span id="chapterLabel">01 / 01</span>
+        </div>
+        <button id="menuButton" class="menu-button" aria-expanded="false" aria-controls="chapterMenu"><span></span><span></span></button>
+      </header>
+
+      <aside id="chapterMenu" class="chapter-menu" aria-hidden="true"></aside>
+      <div id="progressTrack" class="progress-track" aria-hidden="true"><div id="progressFill" class="progress-fill"></div></div>
+      <section id="slides" class="slides" aria-live="polite"></section>
+      <nav class="deck-nav" aria-label="Navigation de la présentation">
+        <button id="previousButton" class="nav-control" aria-label="Chapitre précédent">← <span>Précédent</span></button>
+        <div id="navDots" class="nav-dots" aria-label="Chapitres"></div>
+        <button id="nextButton" class="nav-control nav-next" aria-label="Chapitre suivant"><span>Suivant</span> →</button>
+      </nav>
+    </main>
+
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true"><div class="loader-mark">BTL</div></div>
+  </div>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
